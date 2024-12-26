@@ -21,22 +21,22 @@ const pool = new Pool({
 
 // 1. Read all records
 app.get('/api/records', async (req, res) => {
-    const monthYearKey = req.query.month_year_key;  // Retrieve the query parameter
-    console.log(monthYearKey)
-    if (!monthYearKey) {
-      return res.status(400).json({ message: 'Month-Year Key is required' });
-    }
-    try {
-      const result = await pool.query(
-        'SELECT * FROM dailystockrecord WHERE month_year_key = $1',
-        [monthYearKey]
-      );
-      res.status(200).json(result.rows);
-    } catch (err) {
-      console.error('Error fetching stock records:', err);
-      res.status(500).json({ message: 'Server error' });
-    }
-  });
+  const monthYearKey = req.query.month_year_key;  // Retrieve the query parameter
+  console.log(monthYearKey)
+  if (!monthYearKey) {
+    return res.status(400).json({ message: 'Month-Year Key is required' });
+  }
+  try {
+    const result = await pool.query(
+      'SELECT * FROM dailystockrecord WHERE month_year_key = $1',
+      [monthYearKey]
+    );
+    res.status(200).json(result.rows);
+  } catch (err) {
+    console.error('Error fetching stock records:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
 
 // 2. Insert a new record
 app.post('/api/records', async (req, res) => {
@@ -50,16 +50,7 @@ app.post('/api/records', async (req, res) => {
     loss_percentage,
     verdict,
   } = req.body;
-console.log(month_year_key,
-    record_date,
-    current_price,
-    buy_price,
-    sell_price,
-    profit_percentage,
-    loss_percentage,
-    verdict,)
 
-    console.log(req.body)
   try {
     const query = `
       INSERT INTO DailyStockRecord (
@@ -146,6 +137,29 @@ app.delete('/api/records/:id', async (req, res) => {
     res.status(500).send('Error deleting record');
   }
 });
+
+// Fetch all records for a specific year
+app.get('/api/records/yearlydata', async (req, res) => {
+  const { year } = req.query; // Extract the year from query parameters
+
+  if (!year) {
+    return res.status(400).json({ message: 'Year is required' });
+  }
+
+  try {
+    const query = `
+      SELECT * FROM monthly_expenses
+      WHERE years = $1
+    `;
+    const result = await pool.query(query, [year]);
+    res.status(200).json(result.rows);
+  } catch (err) {
+    console.error('Error fetching records for the year:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+
 
 // Start the server
 const PORT = 3000;
